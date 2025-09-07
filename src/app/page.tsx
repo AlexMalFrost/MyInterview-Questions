@@ -1,20 +1,10 @@
-import Header from './header/header';
-import CodingTest from './main/codingTest';
+import CodeEntropyAnalyzer from '@/components/CodeEntropyAnalyzer';
 
-export default function Home() {
+export default function EntropyPage() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="grid place-items-center bg-black-500 text-white p-4">
-        <Header />
-      </header>
-      <div className="flex flex-1">
-        <aside className="w-64 bg-gray-200 p-4 hidden md:block text-black">Левая панель</aside>
-        <main className="flex-1 bg-white p-4">
-          <CodingTest />
-        </main>
-        <aside className="w-64 bg-gray-200 p-4 hidden lg:block text-black">Правая панель</aside>
-      </div>
-      <footer className="grid place-items-center bg-blue-500 text-white p-4">Подвал сайта</footer>
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold text-center mb-8">Анализатор энтропии JavaScript кода</h1>
+      <CodeEntropyAnalyzer />
     </div>
   );
 }
