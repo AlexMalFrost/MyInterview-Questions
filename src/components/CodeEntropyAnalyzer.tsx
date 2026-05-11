@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { analyzeCodeEntropy, CodeEntropyMetrics } from '@/app/lib/entropy';
+import { analyzeCodeEntropy, CodeEntropyMetrics } from '@/app/lib/index';
 
 export default function CodeEntropyAnalyzer() {
   const [code, setCode] = useState<string>(SAMPLE_CODE);
@@ -14,7 +14,7 @@ export default function CodeEntropyAnalyzer() {
     try {
       const start = performance.now();
       const metrics = analyzeCodeEntropy(code);
-      const duration = performance.now() - start;
+      const duration: number = performance.now() - start;
 
       console.log(`Entropy calculation took ${duration.toFixed(2)} ms`);
       return metrics;
@@ -33,6 +33,25 @@ export default function CodeEntropyAnalyzer() {
     if (entropy < 2.5) return 'text-green-600';
     if (entropy < 4.0) return 'text-yellow-600';
     return 'text-red-600';
+  };
+
+  const getAstDepthInterpretation = (astDepth: number): string => {
+    if (astDepth < 5) return 'Низкая глубина: простая, плоская структура кода';
+    if (astDepth < 10) return 'Средняя глубина: умеренная вложенность, хорошая читаемость';
+    return 'Высокая глубина: сложная вложенная структура, может быть трудна для понимания';
+  };
+
+  const getBranchingFactorInterpretation = (factor: number): string => {
+    if (factor < 1.5) return 'Низкое ветвление: линейная структура, простой поток выполнения';
+    if (factor < 2.5) return 'Среднее ветвление: здоровый баланс между структурой и сложностью';
+    return 'Высокое ветвление: сложная структура с множеством ветвлений, может быть трудна для тестирования';
+  };
+
+  const getCyclomaticComplexityInterpretation = (complexity: number): string => {
+    if (complexity <= 5) return 'Низкая сложность: очень простой код, легко тестировать';
+    if (complexity <= 10) return 'Средняя сложность: нормальная сложность для большинства функций';
+    if (complexity <= 15) return 'Высокая сложность: рекомендуется рефакторинг для упрощения';
+    return 'Критическая сложность: необходимо срочное упрощение кода';
   };
 
   return (
@@ -167,6 +186,79 @@ export default function CodeEntropyAnalyzer() {
             </div>
           </div>
 
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-medium text-gray-700 mb-2">Глубина AST</h3>
+              <div className="flex items-baseline">
+                <span
+                  className={`text-2xl font-bold ${
+                    result.astDepth > 10
+                      ? 'text-red-600'
+                      : result.astDepth > 5
+                        ? 'text-yellow-600'
+                        : 'text-green-600'
+                  }`}>
+                  {result.astDepth}
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-gray-600">
+                {getAstDepthInterpretation(result.astDepth)}
+              </p>
+            </div>
+
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-medium text-gray-700 mb-2">Коэффициент ветвления</h3>
+              <div className="flex items-baseline">
+                <span
+                  className={`text-2xl font-bold ${
+                    result.astBranchingFactor > 2.5
+                      ? 'text-red-600'
+                      : result.astBranchingFactor > 1.5
+                        ? 'text-yellow-600'
+                        : 'text-green-600'
+                  }`}>
+                  {result.astBranchingFactor.toFixed(2)}
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-gray-600">
+                {getBranchingFactorInterpretation(result.astBranchingFactor)}
+              </p>
+            </div>
+
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-medium text-gray-700 mb-2">Разнообразие конструкций</h3>
+              <div className="flex items-baseline">
+                <span className="text-2xl font-bold text-purple-600">{result.astDiversity}</span>
+              </div>
+              <p className="mt-1 text-sm text-gray-600">
+                {result.astDiversity < 15
+                  ? 'Низкое разнообразие: ограниченный набор конструкций, возможно избыточность'
+                  : result.astDiversity < 30
+                    ? 'Среднее разнообразие: здоровый баланс между разнообразием и согласованностью'
+                    : 'Высокое разнообразие: много различных конструкций, может указывать на отсутствие стандартов'}
+              </p>
+            </div>
+
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-medium text-gray-700 mb-2">Цикломатическая сложность</h3>
+              <div className="flex items-baseline">
+                <span
+                  className={`text-2xl font-bold ${
+                    result.cyclomaticComplexity > 15
+                      ? 'text-red-600'
+                      : result.cyclomaticComplexity > 10
+                        ? 'text-yellow-600'
+                        : 'text-green-600'
+                  }`}>
+                  {result.cyclomaticComplexity}
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-gray-600">
+                {getCyclomaticComplexityInterpretation(result.cyclomaticComplexity)}
+              </p>
+            </div>
+          </div>
+
           <div className="mt-6 p-4 bg-green-50 rounded-lg">
             <h3 className="font-medium text-gray-700 mb-3">Интерпретация результатов</h3>
 
@@ -177,8 +269,8 @@ export default function CodeEntropyAnalyzer() {
                   {result.shannonEntropy < 2.5
                     ? 'Низкая энтропия указывает на высокую предсказуемость кода, что может быть признаком избыточности или дублирования. Возможно, код можно упростить или вынести повторяющиеся части в функции.'
                     : result.shannonEntropy < 4.0
-                    ? 'Средняя энтропия характерна для нормального кода. Баланс между структурированностью и разнообразием операторов.'
-                    : 'Высокая энтропия может указывать на сложный, запутанный код с низкой читаемостью. Возможно, стоит пересмотреть архитектуру или добавить комментарии.'}
+                      ? 'Средняя энтропия характерна для нормального кода. Баланс между структурированностью и разнообразием операторов.'
+                      : 'Высокая энтропия может указывать на сложный, запутанный код с низкой читаемостью. Возможно, стоит пересмотреть архитектуру или добавить комментарии.'}
                 </p>
               </div>
 
@@ -188,8 +280,8 @@ export default function CodeEntropyAnalyzer() {
                   {result.duplicateLinesPercentage > 30
                     ? 'Высокий процент дублирования строк указывает на необходимость рефакторинга. Рассмотрите возможность создания общих функций или хуков.'
                     : result.duplicateLinesPercentage > 10
-                    ? 'Умеренный процент дублирования. Возможно, некоторые части кода можно объединить.'
-                    : 'Низкий процент дублирования строк — хороший признак поддерживаемого кода.'}
+                      ? 'Умеренный процент дублирования. Возможно, некоторые части кода можно объединить.'
+                      : 'Низкий процент дублирования строк — хороший признак поддерживаемого кода.'}
                 </p>
               </div>
             </div>
